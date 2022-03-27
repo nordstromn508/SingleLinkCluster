@@ -1,22 +1,24 @@
+"""
+SingleLinkCluster.py
+    OOP implementation of single link cluster algorithm
+
+    @author Nicholas Nordstrom
+"""
 import numpy as np
-
-
-class Point:
-    pass
-
-
-class Cluster:
-    pass
-
+class Point: pass
+class Cluster: pass
 
 class Point:
     """
     Point object represents a vector of number values
     """
-    vars = np.array()
 
-    def __init__(self, vars: list(float | int)):
-        self.vars = vars
+    def __init__(self, new_vars: list(float | int)):
+        """
+        initalize new point object consisting of a vector of int or float values
+        :param new_vars: vector to store in point object
+        """
+        self.vars = new_vars
 
     def dist(self, p2: Point):
         """
@@ -31,10 +33,14 @@ class Cluster:
     """
     Cluster object represents a group of 0 or more points
     """
-    points = np.array()
 
     def __init__(self, points: list(Point)):
+        """
+        initialize a cluster object constsing of 0 or more point objects
+        :param points: point objects to store into cluster
+        """
         self.points = points
+        self.dists = None
 
     def get_dists(self, c2: Cluster):
         """
@@ -82,39 +88,45 @@ class SLC:
     Step 3] Identify two closest points and cluster them
             recompute distance matrix
 
-    Step 4] repeat step 3 until there is only 1 point
+    Step 4] repeat step 3 until there is only 1 cluster
     """
-
-    clusters = []
-
-    def __init__(self, clusters: list(Cluster)):
-        self.clusters = clusters
-
-    def plot(self):
-        pass
+    def __init__(self):
+        self.clusters = None
 
     def calculate_distances(self):
+        """
+        calculate
+        :return: list of index
+        """
+        dists = np.empty(len(self.clusters)-1)
+        for c1 in self.clusters:
+            idx = 0
+            for c2 in self.clusters:
+                if c1 is not c2:
+                    dists[idx] = c1.dist(c2)
+                idx += 1
+            c1.dists = dists
+
         pass
 
     def closest_points(self):
+        dists = self.calculate_distances()
+
+        np.argmin(dists)
+        dists[]
+        return c1_idx, c2_idx
+
+    def cluster_points(self, c1_idx, c2_idx):
         pass
 
-    def cluster_points(self):
+    def fit(self, points):
+        self.clusters = [c for c in [Cluster([p]) for p in points]]
+
+        while len(self.clusters) != 1:
+            self.cluster_points(self.closest_points())
+
+    def predict(self):
         pass
-
-    def cluster(self):
-        clustered = []
-
-        self.plot()
-        self.calculate_distances()
-
-        while len(self.points) != 1:
-            p1, p2 = self.closest_points()
-            self.cluster_points(p1, p2)
-            self.calculate_distances()
-
-        return
-
 
 def main():
     SLC

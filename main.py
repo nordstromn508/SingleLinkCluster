@@ -4,12 +4,13 @@ main.py
 
     @author Nicholas Nordstrom
 """
-import SingleLinkCluster as SLC
+from SingleLinkCluster import Point, Cluster, SLC
 
 
 def main():
-    model = SLC.SLC()
-
+    model = SLC()
+    p1 = Point([1, 0], 'p1')
+    print(str(p1))
 
 if __name__ == '__main__':
     main()

@@ -19,7 +19,7 @@ class Point:
         initalize new point object consisting of a vector of int or float values
         :param new_vars: vector to store in point object
         """
-        self.vars = new_vars
+        self.vars = np.array(new_vars)
         self.name = name
 
     def __str__(self):
@@ -35,7 +35,7 @@ class Point:
         :param p2: second point
         :return: euclidean distance between self and the second point
         """
-        return np.linalg.norm(self.vars, p2.vars)
+        return np.linalg.norm(self.vars - p2.vars)
 
 
 class Cluster:
@@ -56,7 +56,7 @@ class Cluster:
         convert cluster object to a neat looking description
         :return: string representation
         """
-        return self.name + ':{' + [str(p) for p in self.points] + '}'
+        return self.name + ':{' + ', '.join([str(p) for p in self.points]) + '}'
 
     def get_dists(self, c2: Cluster):
         """
@@ -78,11 +78,19 @@ class Cluster:
         :param c2: second cluster
         :return: minimum euclidean distance between self and the other cluster
         """
-        min = self.points[0].dist(c2.points[0])
-        for p1 in self.points:
-            for p2 in c2.points:
-                min = np.min(min, p1.dist(p2))
-        return min
+        n = len(self.points)
+        m = len(c2.points)
+        dists = np.empty((n*m))
+        mask = np.empty((n*m, 2))
+
+        idx = 0
+        for i in range(n):
+            for j in range(m):
+                dists[idx] = self.points[i].dist(c2.points[j])
+                mask[idx] = [i, j]
+                idx += 1
+
+        return np.min(dists)
 
     def consume(self, c2: Cluster):
         """
@@ -90,6 +98,7 @@ class Cluster:
         :param c2: second cluster
         :return: None
         """
+        self.name += ', ' + c2.name
         for p in c2.points:
             self.points.append(p)
         return None
@@ -121,10 +130,12 @@ class SLC:
         dists = np.empty(int((l/2)*(l-1)))
         mask = np.empty((int((l/2)*(l-1)), 2))
 
+        idx = 0
         for i in range(l-1):
             for j in range(i+1, l):
-                dists[i] = self.clusters[i].dist(self.clusters[j+1])
-                mask[i] = [i, j]
+                dists[idx] = self.clusters[i].dist(self.clusters[j])
+                mask[idx] = [i, j]
+                idx += 1
 
         return dists, mask
 
@@ -137,9 +148,10 @@ class SLC:
         """
         dists, mask = self.calculate_distances()
         idx = np.argmin(dists)
-        return mask[idx], dists[idx]
+        c0_idx, c1_idx = mask[idx]
+        return int(c0_idx), int(c1_idx), dists[idx]
 
-    def cluster_points(self, c0_idx, c1_idx):
+    def cluster_points(self, c0_idx: int, c1_idx: int):
         """
         Given two different cluster indexes, combine them into one cluster and resolve old references
         :param c0_idx: index value for cluster 0
@@ -147,18 +159,25 @@ class SLC:
         :return: None
         """
         self.clusters[c0_idx].consume(self.clusters[c1_idx])
-        self.clusters[c0_idx].name += ', ' + self.clusters[c1_idx].name
-        self.clusters.remove(c1_idx)
+        mask = np.ones_like(self.clusters, dtype=bool)
+        mask[c1_idx] = 0
+        self.clusters = self.clusters[mask]
 
     def fit_predict(self, points):
-        self.clusters = [c for c in [Cluster([p]) for p in points]]
-        consumption_line = np.empty(len(self.clusters)-1)
+
+        self.clusters = np.array([c for c in list(map(Cluster, [[p] for p in points], ['c' + str(i) for i in range(len(points))]))])
+        consumption_c0 = ['']*(len(self.clusters)-1)
+        consumption_c1 = ['']*(len(self.clusters)-1)
+        consumption_dist = np.empty((len(self.clusters) - 1))
 
         idx = 0
         while len(self.clusters) != 1:
             c0_idx, c1_idx, dist = self.closest_points()
-            consumption_line[idx] = [self.clusters[c0_idx].name, self.clusters[c1_idx].name, dist]
 
+            consumption_c0[idx] = self.clusters[c0_idx].name
+            consumption_c1[idx] = self.clusters[c1_idx].name
+            consumption_dist[idx] = dist
             self.cluster_points(c0_idx, c1_idx)
+            idx += 1
 
-        return consumption_line
+        return consumption_c0, consumption_c1, consumption_dist

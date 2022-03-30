@@ -22,12 +22,12 @@ class Point:
         self.vars = new_vars
         self.name = name
 
-        def __str__(self):
-            """
-            cast point object to a string
-            :return:
-            """
-            return self.name + ':' + str(self.vars)
+    def __str__(self):
+        """
+        cast point object to a string
+        :return:
+        """
+        return self.name + ':' + str(self.vars)
 
     def dist(self, p2: Point):
         """
@@ -50,6 +50,13 @@ class Cluster:
         """
         self.points = points
         self.name = name
+
+    def __str__(self):
+        """
+        convert cluster object to a neat looking description
+        :return: string representation
+        """
+        return self.name + ':{' + [str(p) for p in self.points] + '}'
 
     def get_dists(self, c2: Cluster):
         """
